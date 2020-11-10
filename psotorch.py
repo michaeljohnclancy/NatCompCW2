@@ -43,7 +43,6 @@ class PSO(Optimizer):
                           + np.multiply(a1r1, best_particle_dif) \
                           + np.multiply(a2r2, best_swarm_dif)
 
-
         if np.any(self.positions.T @ self.positions > 1.0e+18):
              raise SystemExit('Most likely divergent: Decrease parameter values')
 

@@ -1,11 +1,11 @@
 from psotorch import PSO
 
-def run_training_cycle(x_train, y_train, model, loss, num_epochs, inertia, a1, a2, population_size, device=None, verbose=False):
+def run_training_cycle(x_train, y_train, model, loss, num_epochs, inertia, a1, a2, population_size, device="cpu", verbose=False):
 
-    cuda = device is not None
-    if cuda:
-        model = model.to(device)
-        loss = loss.to(device)
+    model = model.to(device)
+    loss = loss.to(device)
+
+    cuda = "cuda" in device
 
     optimizer = PSO(x_train, y_train, model=model, loss=loss, dim=56, inertia=inertia, a1=a1, a2=a2, population_size=population_size, search_range=1, cuda=cuda)
 

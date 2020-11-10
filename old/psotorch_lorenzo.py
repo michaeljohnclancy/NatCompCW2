@@ -8,7 +8,7 @@ class PSO(Optimizer):
     """Pytorch implementation of PSO algorithm
     """
 
-    def __init__(self, features, labels, model, loss, inertia, a1, a2, dim, population_size, time_steps, search_range):
+    def __init__(self, features, labels, model, loss, inertia, a1, a2, dim, population_size, search_range):
         self.features = features
         self.labels = labels
         self.model = model
@@ -18,7 +18,6 @@ class PSO(Optimizer):
         self.a2 = a2
         self.dim = dim
         self.population_size = population_size
-        self.time_steps = time_steps
 
         self.positions = np.random.uniform(low=-search_range, high=search_range,
                                            size=(self.population_size, self.dim))

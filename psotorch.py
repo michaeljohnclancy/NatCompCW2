@@ -10,7 +10,7 @@ class PSO(Optimizer):
     """Pytorch implementation of PSO algorithm
     """
 
-    def __init__(self, features, labels, model, loss, inertia, a1, a2, dim, population_size, search_range):
+    def __init__(self, features, labels, model, loss, inertia, a1, a2, dim, population_size, search_range, cuda=False):
         self.features = features
         self.labels = labels
         self.model = model
@@ -20,6 +20,7 @@ class PSO(Optimizer):
         self.a2 = a2
         self.dim = dim
         self.population_size = population_size
+        self.cuda = cuda
 
         self.positions = np.random.uniform(low=-search_range, high=search_range, size=(self.population_size, self.dim))
         self.velocities = np.random.uniform(low=-0.1, high=0.1, size=(self.population_size, self.dim))
@@ -31,7 +32,7 @@ class PSO(Optimizer):
         self.best_particle_fitnesses = np.array([1e30] * self.population_size)
 
     def step(self, closure=None):
-        a1r1 = np.multiply(self.a2, np.random.uniform(low=0, high=1, size=(self.population_size, self.dim)))
+        a1r1 = np.multiply(self.a1, np.random.uniform(low=0, high=1, size=(self.population_size, self.dim)))
         a2r2 = np.multiply(self.a2, np.random.uniform(low=0, high=1, size=(self.population_size, self.dim)))
 
         best_particle_dif = np.subtract(self.best_particle_positions, self.positions)
@@ -50,7 +51,7 @@ class PSO(Optimizer):
             for i in range(self.population_size):
                 self.update_model_weights(self.positions[i])
 
-                if torch.cuda.is_available():
+                if self.cuda:
                     particle_predictions = self.model(self.features.cuda())
                     particle_fitness = self.loss(particle_predictions, self.labels.type(torch.FloatTensor).cuda())
                 else:

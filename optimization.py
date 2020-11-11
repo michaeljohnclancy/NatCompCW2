@@ -10,7 +10,7 @@ class PSO(Optimizer):
     """Pytorch implementation of PSO algorithm
     """
 
-    def __init__(self, features, labels, model, loss, inertia, a1, a2, dim, population_size, search_range, cuda=False):
+    def __init__(self, features, labels, model, loss, inertia, a1, a2, population_size, search_range, cuda=False):
         self.features = features
         self.labels = labels
         self.model = model
@@ -18,18 +18,20 @@ class PSO(Optimizer):
         self.inertia = inertia
         self.a1 = a1
         self.a2 = a2
-        self.dim = dim
         self.population_size = population_size
         self.cuda = cuda
+
+        self.dim = sum(p.numel() for p in model.parameters() if p.requires_grad)
 
         self.positions = np.random.uniform(low=-search_range, high=search_range, size=(self.population_size, self.dim))
         self.velocities = np.random.uniform(low=-0.1, high=0.1, size=(self.population_size, self.dim))
 
-        self.best_swarm_position = np.random.uniform(low=-500, high=500, size=self.dim)
+        self.best_swarm_position = np.random.uniform(low=-search_range, high=search_range, size=self.dim)
         self.best_swarm_fitness = 1e30
 
         self.best_particle_positions = np.copy(self.positions)
         self.best_particle_fitnesses = np.array([1e30] * self.population_size)
+        
 
     def step(self, closure=None):
         a1r1 = np.multiply(self.a1, np.random.uniform(low=0, high=1, size=(self.population_size, self.dim)))
@@ -43,8 +45,8 @@ class PSO(Optimizer):
                           + np.multiply(a1r1, best_particle_dif) \
                           + np.multiply(a2r2, best_swarm_dif)
 
-        if np.any(self.positions.T @ self.positions > 1.0e+18):
-             raise SystemExit('Most likely divergent: Decrease parameter values')
+        # if np.any(self.positions.T @ self.positions > 1.0e+18):
+        #      raise SystemExit('Most likely divergent: Decrease parameter values')
 
         with torch.no_grad():
             for i in range(self.population_size):

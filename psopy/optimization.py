@@ -8,20 +8,21 @@ class PSO(Optimizer):
     """Pytorch implementation of PSO algorithm
     """
 
-    def __init__(self, features, labels, model, loss, inertia, a1, a2, population_size, search_range, seed, cuda=False):
+    def __init__(self, features, labels, model, loss, inertia, a1, a2, population_size, search_range, dim, seed, cuda=False):
         self.features = features
         self.labels = labels
         self.model = model
         self.loss = loss
+
         self.inertia = inertia
         self.a1 = a1
         self.a2 = a2
         self.population_size = population_size
         self.search_range = search_range
-        self.cuda = cuda
-        self.seed = seed
 
-        self.dim = sum(p.numel() for p in model.parameters() if p.requires_grad)
+        self.dim = dim
+        self.seed = seed
+        self.cuda = cuda
 
         self.positions = np.random.uniform(low=-search_range, high=search_range, size=(self.population_size, self.dim))
         self.velocities = np.random.uniform(low=-0.1, high=0.1, size=(self.population_size, self.dim))

@@ -31,7 +31,6 @@ class LinearInputsSpiralClassifier(nn.Module):
 
 
 class GenericSpiralClassifier(nn.Module):
-    layers = []
 
     def __init__(self, network_structure):
 
@@ -39,8 +38,7 @@ class GenericSpiralClassifier(nn.Module):
 
         network_structure = list(filter(lambda a: a != 0, network_structure))
 
-        # self.dimension = network_structure[0]*network_structure[1] + network_structure[1]*network_structure[2]
-
+        self.layers = nn.ModuleList()
         for i in range(len(network_structure) - 1):
             self.layers.append(make_layer(network_structure[i], network_structure[i + 1]))
 

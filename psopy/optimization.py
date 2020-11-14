@@ -1,7 +1,5 @@
 import numpy as np
 
-from math import prod
-
 import torch
 from torch.optim import Optimizer
 
@@ -10,7 +8,7 @@ class PSO(Optimizer):
     """Pytorch implementation of PSO algorithm
     """
 
-    def __init__(self, features, labels, model, loss, inertia, a1, a2, population_size, search_range, cuda=False):
+    def __init__(self, features, labels, model, loss, inertia, a1, a2, population_size, search_range, seed, cuda=False):
         self.features = features
         self.labels = labels
         self.model = model
@@ -19,7 +17,9 @@ class PSO(Optimizer):
         self.a1 = a1
         self.a2 = a2
         self.population_size = population_size
+        self.search_range = search_range
         self.cuda = cuda
+        self.seed = seed
 
         self.dim = sum(p.numel() for p in model.parameters() if p.requires_grad)
 
@@ -79,3 +79,6 @@ class PSO(Optimizer):
             old_layer_len = new_layer_len
 
             param.copy_(torch.tensor(new_position_layer_1).reshape(param.size()))
+
+    def __hash__(self):
+        return hash((self.inertia, self.a1, self.a2, self.population_size, self.search_range, self.seed))

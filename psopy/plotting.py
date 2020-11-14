@@ -3,6 +3,8 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 from matplotlib.font_manager import FontProperties
 
+plt.rcParams.update({"text.usetex": True})
+
 plt.style.use('ggplot')
 
 fontP = FontProperties()

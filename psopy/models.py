@@ -36,7 +36,6 @@ class GenericSpiralClassifier(nn.Module):
 
         super(GenericSpiralClassifier, self).__init__()
 
-        network_structure = list(filter(lambda a: a != 0, network_structure))
 
         self.layers = nn.ModuleList()
         for i in range(len(network_structure) - 1):

@@ -20,15 +20,15 @@ class TrainingInstance:
     Assumes all inputs have well defined hashing functions if wanting to use the cache.
     """
 
-    def __init__(self, x_train, y_train, network_layers, inertia, a1, a2, population_size, search_space, epochs, seed, x_val=None, y_val=None, cache_loc=Path("/home/mclancy/Documents/notes/edinburgh/year4/naturalcomputing/coursework/data/cache/"), device="cpu", verbose=False):
+    def __init__(self, x_train, y_train, network_structure, inertia, a1, a2, population_size, search_space, epochs, seed, x_val=None, y_val=None, cache_loc=Path("/home/mclancy/Documents/notes/edinburgh/year4/naturalcomputing/coursework/data/cache/"), device="cpu", verbose=False):
 
         self.x_train = x_train
         self.y_train = y_train
         self.x_val = x_val
         self.y_val = y_val
 
-        self.network_layers = network_layers
-        self.model = GenericSpiralClassifier(self.network_layers).to(device)
+        self.network_structure = list(filter(lambda a: a != 0, network_structure))
+        self.model = GenericSpiralClassifier(self.network_structure).to(device)
         self.loss = BCEWithLogitsLoss().to(device)
         self.optimizer = PSO(x_train, y_train, model=self.model, loss=self.loss, inertia=inertia, a1=a1, a2=a2, population_size=population_size, search_range=search_space, seed=seed, dim=self.get_n_trainable_params())
         self.epochs = epochs
@@ -97,7 +97,7 @@ class TrainingInstance:
         torch.save(self.model.state_dict(), self.model_cache)
 
     def _get_model_hash(self):
-        return hash("".join(str(self.network_layers)))
+        return hash("".join(str(self.network_structure)))
 
     def __hash__(self):
         return hash((self.epochs, self._get_model_hash(), hash(self.optimizer), self.device))

@@ -1,14 +1,16 @@
 import numpy as np
 
+import torch
+
 import torch.nn as nn
 
-from psopy.preprocess import load_tensors, phi
-from psopy.models import GenericSpiralClassifier
+from preprocess import load_tensors, phi
+from models import GenericSpiralClassifier
 
-from psopy.training import TrainingInstance
+from training import TrainingInstance
 
-class GA:
-
+class GP:
+    
     def __init__(self, x_train, y_train, D, N, T, p_c, p_m, seed, max_hidden_units=10, dev="cpu", inertia=0.7, a1=1.5, a2=1.8, population_size=30, search_range=1, x_val=None, y_val=None, phi=lambda x:x):
 
         self.x_train = phi(x_train)
@@ -45,12 +47,19 @@ class GA:
         THIS NEEDS TO BE GENERALIZED FOR ANY SIZE OF LAYERS. CURRENTLY ONLY WORKDS FOR 3.
         """
 
-        start = np.random.randint(1, 6, size=(self.N, 1))
-        mid = np.random.randint(self.min_hidden_units, self.max_hidden_units, size=(self.N, self.D - 2))
-        init_pop = np.hstack((start, mid))
-        end = np.ones((init_pop.shape[0], 1))
+        start = np.random.binomial(n=1, p=0.5, size=(self.N, 6))
+       
+        member_genes = []
+        for member_index in range(self.N):
+            member_hidden_units = []
+            for layer_index in range(self.D - 2):
+                number_hidden_units = np.random.randint(self.max_hidden_units)
+                activation_function_choice = np.random.choice(['A', 'B', 'C'])
+                member_hidden_units.append([number_hidden_units, activation_function_choice])
+                
+            member_genes.append([start[member_index], member_hidden_units, 1])
 
-        init_pop = np.hstack((init_pop, end))
+        init_pop = member_genes
         return init_pop
 
     def fitness_func(self, num_epochs):
@@ -66,19 +75,39 @@ class GA:
         fitness_list = np.zeros(self.N)
         i = 0
 
+        
         for member in self.population:
             print(f"Currently training: {member}.")
+            
+            network_structure = []
+            for i in range(len(member)):
+                if i == 0:
+                    network_structure.append(np.sum(member[i]))
+                elif i == 1:
+                    for x in member[i]:
+                        network_structure.append(x[0])
+                else:
+                    network_structure.append(1)
+            
+            nonlinearities = []
+            for i in range(len(member[1])):
+                if member[1][i][0] != 0:
+                    nonlinearities.append(member[1][i][1])
+                
+            training_instance = TrainingInstance(x_train=get_feature_subset(self.x_train, member[0]),
+                                                 y_train=self.y_train, x_val=get_feature_subset(self.x_val, member[0]),
+                                                 y_val=self.y_val, network_structure=network_structure,
+                                                 nonlinearity_keys=nonlinearities,
+                                                 inertia=self.inertia, a1=self.a1,a2=self.a2, 
+                                                 population_size=self.population_size, search_space=self.search_range, 
+                                                 seed=self.seed, epochs=num_epochs)
 
-            training_instance = TrainingInstance(x_train=self.x_train[:, :member.astype(int)[0]], y_train=self.y_train, x_val=self.x_val, y_val=self.y_val,
-                                 network_layers=member.astype(int), inertia=self.inertia, a1=self.a1, a2=self.a2,
-                                 population_size=self.population_size, search_space=self.search_range, seed=self.seed, epochs=num_epochs)
-
-            fitness = training_instance.get_current_performances().loc[('train', "fitness")]
+            fitness = training_instance.get_current_performances().loc[('val', "fitness")]
             fitness_list[i] = fitness
 
             print(f"{member} with fitness {fitness}.")
-            fitness_indices = fitness_list.argsort()
-            sorted_pop = self.population[fitness_indices]
+            fitness_indices = np.argsort(fitness_list)
+            sorted_pop = [self.population[i] for i in fitness_indices]
             i += 1
 
         fitness_list = fitness_list[fitness_indices]
@@ -133,13 +162,14 @@ class GA:
 
     def mutate(self, population):
 
-        for member in range(len(population)):
-            for chromosome in range(self.D - 1):
+        for member_index in range(len(population)):
+            for chromosome_type_index in range(self.D - 1):
                 if np.random.rand() < self.p_m:
-                    if chromosome == 0:
-                        population[member][chromosome] = np.random.randint(1, 6)
+                    if chromosome_type_index == 0:
+                        population[member_index][chromosome_type_index] = [not x if np.random.rand() < self.p_m else x for x in population[member_index][chromosome_type_index]]
                     else:
-                        population[member][chromosome] = np.random.randint(1, 10)
+                        population[member_index][chromosome_type_index][0] = np.random.randint(self.max_hidden_units)
+                        population[member_index][chromosome_type_index][1] = np.rand.choice(["A","B","C"])
 
         return population
 
@@ -155,3 +185,9 @@ class GA:
             # Update for the next generation, here is where we crossover and mutation
             self.population = self.new_generation(intermediate_pop)
             print(t), print(self.population)
+            
+        sorted_pop, fitness_list = self.fitness_func(num_epochs)
+        return sorted_pop[0]
+
+def get_feature_subset(data, phi_bool_map):
+    return data[np.nonzero(phi_bool_map)]

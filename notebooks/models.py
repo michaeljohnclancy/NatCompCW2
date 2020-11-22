@@ -31,19 +31,32 @@ class LinearInputsSpiralClassifier(nn.Module):
 
 
 class GenericSpiralClassifier(nn.Module):
-
-    def __init__(self, network_structure):
-
+    
+    def __init__(self, network_structure, nonlinearity_keys=None):
         super(GenericSpiralClassifier, self).__init__()
-
+        
+        nonlinearity_dict = {"A": torch.tanh, "B": torch.relu, "C": torch.sigmoid}
+        
+        print(len(network_structure))
+        print(network_structure)
+        print(len(nonlinearity_keys))
+        print(nonlinearity_keys)
+        assert(len(network_structure)-2 == len(nonlinearity_keys))
+        
+        if nonlinearity_keys is None:
+            nonlinearities = [lambda x: torch.tanh(x) for layer in self.layers[:-1]]
+        else:
+            nonlinearities = [nonlinearity_dict[nonlinearity_keys[i]] for i in range(len(nonlinearity_keys))]
+            
+        self.nonlinearities = nonlinearities
 
         self.layers = nn.ModuleList()
         for i in range(len(network_structure) - 1):
             self.layers.append(make_layer(network_structure[i], network_structure[i + 1]))
 
     def forward(self, x):
-        for layer in self.layers[:-1]:
-            x = torch.tanh(layer(x))
+        for i, layer in enumerate(self.layers[:-1]):
+            x = self.nonlinearities[i](layer(x))
         x = self.layers[-1](x)
         return x
 

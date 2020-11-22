@@ -3,10 +3,11 @@ from pathlib import Path
 
 import pandas as pd
 import torch
+from progress.bar import Bar
 from torch.nn import BCEWithLogitsLoss, BCELoss
 
-from psopy.models import GenericSpiralClassifier
-from psopy.optimization import PSO
+from models import GenericSpiralClassifier
+from optimization import PSO
 
 
 def _get_accuracy(y_train, y_train_preds):
@@ -20,15 +21,18 @@ class TrainingInstance:
     Assumes all inputs have well defined hashing functions if wanting to use the cache.
     """
 
-    def __init__(self, x_train, y_train, network_structure, inertia, a1, a2, population_size, search_space, epochs, seed, x_val=None, y_val=None, cache_loc=Path("/home/mclancy/Documents/notes/edinburgh/year4/naturalcomputing/coursework/data/cache/"), device="cpu", verbose=False):
+    def __init__(self, x_train, y_train, network_structure, inertia, a1, a2, population_size, search_space, epochs, seed, nonlinearity_keys=None, x_val=None, y_val=None, cache_loc=Path("/home/mclancy/Documents/notes/edinburgh/year4/naturalcomputing/coursework/data/cache/"), device="cpu", verbose=False):
 
         self.x_train = x_train
         self.y_train = y_train
         self.x_val = x_val
         self.y_val = y_val
 
+        self.pso_params = {"inertia": inertia, "a1": a1, "a2": a2, "search_space": search_space, "population_size": population_size}
+
         self.network_structure = list(filter(lambda a: a != 0, network_structure))
-        self.model = GenericSpiralClassifier(self.network_structure).to(device)
+        self.nonlinearity_keys = nonlinearity_keys
+        self.model = GenericSpiralClassifier(self.network_structure, self.nonlinearity_keys).to(device)
         self.loss = BCEWithLogitsLoss().to(device)
         self.optimizer = PSO(x_train, y_train, model=self.model, loss=self.loss, inertia=inertia, a1=a1, a2=a2, population_size=population_size, search_range=search_space, seed=seed, dim=self.get_n_trainable_params())
         self.epochs = epochs
@@ -39,7 +43,8 @@ class TrainingInstance:
 
         self.verbose = verbose
 
-        if os.path.exists(self.performance_cache):
+
+        if os.path.exists(self.model_cache):
             self.performances = self._load_cached_performances()
             self._load_cached_model_state()
             print("Loaded from disk.")
@@ -47,6 +52,7 @@ class TrainingInstance:
             self.performances = pd.DataFrame(index=pd.MultiIndex.from_product([["train", "val"], ["fitness", "accuracy"]]),
                                               columns=[i for i in range(self.epochs)]
                                               )
+            self.progress_bar = Bar('PSO epoch', max=self.epochs)
             self._fit()
 
     def _fit(self):
@@ -55,12 +61,8 @@ class TrainingInstance:
             fitness = self.loss(y_train_preds, self.y_train)
             self.performances.loc[("train", "fitness")][i] = fitness
 
-
             accuracy = _get_accuracy(self.y_train, y_train_preds)
             self.performances.loc[("train", "accuracy")][i] = accuracy
-
-            if self.verbose:
-                print(f"Epoch {i}: Fitness = {fitness}; Training Acc = {accuracy}")
 
             if self.x_val is not None and self.y_val is not None:
                 y_val_preds = self.model(self.x_val)
@@ -71,8 +73,14 @@ class TrainingInstance:
 
             self.optimizer.step()
 
+            if self.verbose:
+                print(f"Epoch {i}: Fitness = {fitness}; Training Acc = {accuracy}")
+
+            self.progress_bar.next()
+
         self._cache_performances()
         self._cache_model_state()
+
 
     def get_n_trainable_params(self):
         n = 0

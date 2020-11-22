@@ -24,12 +24,12 @@ def plot_performances(training_instances, plot_title, fitness_name, save_locatio
     fig, ax = plt.subplots(ncols=1, nrows=2, figsize=(12, 8))
     plt.title(plot_title, y=2.3)
 
-    min_acc = min(training_instance.get_performances().loc[("val", "accuracy")].iloc[-1] for training_instance in training_instances)
-    max_acc = max(training_instance.get_performances().loc[("val", "accuracy")].iloc[-1] for training_instance in training_instances)
+    min_acc = min(training_instance.performances.loc[("val", "accuracy")].iloc[-1] for training_instance in training_instances)
+    max_acc = max(training_instance.performances.loc[("val", "accuracy")].iloc[-1] for training_instance in training_instances)
 
     for training_instance in training_instances:
 
-        performances = training_instance.get_performances()
+        performances = training_instance.performances
 
         color = _value_to_color(performances.loc[("val","accuracy")].iloc[-1], color_min=min_acc, color_max=max_acc)
 

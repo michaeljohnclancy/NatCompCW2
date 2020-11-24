@@ -1,17 +1,17 @@
 import numpy as np
 import torch
 
-from psopy.modules.plotting import plot_performances
-from psopy.modules.preprocess import load_tensors, phi
+from plotting import plot_performances
+from preprocess import load_tensors, phi
 
-from psopy.modules.training import TrainingInstance
+from training import TrainingInstance
 
 seed = 12345324
 np.random.seed(seed)
 torch.random.manual_seed(seed)
 
-epochs = 2
-inertia = 0.9
+epochs = 10000
+inertia = 0.1
 a1 = 2.9
 a2 = 1.1
 population_size = 30
@@ -28,7 +28,6 @@ training_instance = TrainingInstance(
 
 plot_performances(
     training_instances=[training_instance],
-    plot_title="Comparison with linear input only network",
-    fitness_name="Binary Cross Entropy loss"
-    )
-    # save_location="/home/mclancy/Documents/notes/edinburgh/year4/naturalcomputing/coursework/figures/comparisontolinearinputs.pdf")
+    plot_title="Optimal hyperparameters",
+    fitness_name="Binary Cross Entropy loss",
+    save_location="/home/mclancy/Documents/notes/edinburgh/year4/naturalcomputing/coursework/figures/comparisontolinearinputs.pdf")

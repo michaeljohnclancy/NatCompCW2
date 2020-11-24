@@ -24,7 +24,7 @@ population_size = 30
 x_train, y_train, x_val, y_val, x_test, y_test = load_tensors('/home/mclancy/Documents/notes/edinburgh/year4/naturalcomputing/coursework/data/two_spirals.dat')
 
 inertia_range = np.round(np.arange(0.1,1.0,0.1), decimals=2)
-a1_range = np.round(np.arange(0, 5.1, 0.1), decimals=2)
+a1_range = np.round(np.arange(0, 5.2, 0.2), decimals=2)
 a2_range = a1_range[::-1]
 
 a1a2_pairs = []
@@ -55,15 +55,28 @@ for i, params in enumerate(param_combinations):
         a1=a1, a2=a2, population_size=population_size,
         search_space=search_size, seed=seed, epochs=epochs)
 
-    validation_loss = training_instance.get_current_performances().loc[("train", "fitness")].iloc[0]
-    validation_accuracy = training_instance.get_current_performances().loc[("train", "accuracy")].iloc[0]
+    validation_loss = training_instance.get_current_performances().loc[("val", "fitness")].iloc[0]
+    validation_accuracy = training_instance.get_current_performances().loc[("val", "accuracy")].iloc[0]
+    training_loss = training_instance.get_current_performances().loc[("train", "fitness")].iloc[0]
+    training_accuracy = training_instance.get_current_performances().loc[("train", "accuracy")].iloc[0]
 
     print(f" Validation Loss={validation_loss}; Validation Accuracy={validation_accuracy}")
     if validation_loss < best_validation_loss:
         best_validation_loss = validation_loss
+        best_validation_accuracy = validation_accuracy
+        best_training_loss = training_loss
+        best_training_accuracy = training_accuracy
+
+        print(f"New best: {best_validation_accuracy}")
+
         best_training_instance = training_instance
 
     bar.next()
 
-with open("/data/hyperparamsearch/bestparams.json", 'w') as fp:
-    json.dump(str(best_training_instance.pso_params), fp)
+with open("data/hyperparamsearch/bestparams.json", 'w') as fp:
+    info = best_training_instance.pso_params
+    info["train_loss"] = best_training_loss.item()
+    info["train_acc"] = best_training_accuracy.item()
+    info["val_loss"] = best_validation_loss.item()
+    info["val_acc"] = best_validation_accuracy.item()
+    json.dump(str(info), fp)

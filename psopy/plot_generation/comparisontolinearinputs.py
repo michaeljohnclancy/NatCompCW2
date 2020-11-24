@@ -2,7 +2,7 @@ import numpy as np
 import torch
 from torch import nn
 
-from psopy.models import BaselineSpiralClassifier, LinearInputsSpiralClassifier
+from psopy.modules.models import BaselineSpiralClassifier, LinearInputsSpiralClassifier
 from preprocess import load_tensors, phi
 from plotting import plot_performances
 

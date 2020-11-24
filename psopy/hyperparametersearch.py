@@ -65,5 +65,5 @@ for i, params in enumerate(param_combinations):
 
     bar.next()
 
-with open("/home/mclancy/Documents/notes/edinburgh/year4/naturalcomputing/coursework/data/hyperparamsearch/bestparams.json", 'w') as fp:
+with open("/data/hyperparamsearch/bestparams.json", 'w') as fp:
     json.dump(str(best_training_instance.pso_params), fp)

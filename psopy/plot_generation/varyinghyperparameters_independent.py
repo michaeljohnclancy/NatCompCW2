@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import torch
 from torch import nn
 
-from psopy.models import BaselineSpiralClassifier
+from psopy.modules.models import BaselineSpiralClassifier
 from preprocess import load_tensors, phi
 
 from training import TrainingInstance

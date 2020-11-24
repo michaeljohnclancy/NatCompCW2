@@ -2,11 +2,11 @@ import numpy as np
 import torch
 from torch import nn
 
-from psopy.models import BaselineSpiralClassifier, LinearInputsSpiralClassifier
-from psopy.preprocess import load_tensors, phi
-from psopy.plotting import plot_performances
+from psopy.modules.models import BaselineSpiralClassifier
+from psopy.modules.preprocess import load_tensors, phi
+from psopy.modules.plotting import plot_performances
 
-from psopy.training import TrainingInstance
+from psopy.modules.training import TrainingInstance
 
 seed = 12345324
 np.random.seed(seed)

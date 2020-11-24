@@ -5,10 +5,10 @@ import matplotlib.pyplot as plt
 import torch
 from torch import nn
 
-from psopy.models import BaselineSpiralClassifier
-from psopy.preprocess import load_tensors, phi
+from psopy.modules.models import BaselineSpiralClassifier
+from psopy.modules.preprocess import load_tensors, phi
 
-from psopy.training import TrainingInstance
+from psopy.modules.training import TrainingInstance
 
 plt.style.use('ggplot')
 
